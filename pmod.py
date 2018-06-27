@@ -60,7 +60,7 @@ USE_SHELL = {
 
 
 def main(shell, mods, expand):
-  if shell not in use_shell:
+  if shell not in USE_SHELL:
     print(f'`{shell}` is not a supported shell', file=sys.stderr)
   use_shell = USE_SHELL[shell]
   for mod in mods:
@@ -80,7 +80,12 @@ def valid_use(mod):
 if __name__ == '__main__':
   current_shell = os.path.basename(env.get('SHELL', 'bash'))
   parser = argparse.ArgumentParser()
-  parser.add_argument('-s', '--shell', default=current_shell, type=str)
+  parser.add_argument(
+      '-s',
+      '--shell',
+      help='(default: current shell `%(default)s`)',
+      default=current_shell,
+      type=str)
   parser.add_argument('-u', '--use', action='append', type=valid_use)
   parser.add_argument('-ne', '--not-expand', action='store_true')
   args = parser.parse_args()
