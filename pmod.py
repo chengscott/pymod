@@ -2,9 +2,11 @@
 """Simple Environment Variable Management
 """
 import argparse
+import difflib
 import json
 import os
 from os import environ as env
+import sys
 
 HOME_PATH = env.get('HOME', '')
 META_PKG, PKG = {}, {}
@@ -45,7 +47,6 @@ USE_SHELL = {
 
 def main(shell, pkgs, expand):
   if shell not in USE_SHELL:
-    import sys
     sys.exit(f'`{shell}` is not a supported shell')
   use_shell = USE_SHELL[shell]
   from collections import defaultdict
@@ -76,7 +77,7 @@ def valid_use(pkg):
     return pkg
   if pkg in KEYWORDS:
     return KEYWORDS[pkg]
-  raise argparse.ArgumentTypeError('Invalid Module Name')
+  raise argparse.ArgumentTypeError(f'Invalid Module Name `{pkg}`')
 
 
 if __name__ == '__main__':
@@ -90,7 +91,26 @@ if __name__ == '__main__':
       type=str)
   parser.add_argument('-u', '--use', action='append', type=valid_use)
   parser.add_argument('-ne', '--not-expand', action='store_true')
-  # parser.add_argument('-c', '--confirm', action='store_true')
+  parser.add_argument('-i', '--interactive', action='store_true')
   args = parser.parse_args()
-  if args.use:
+  if args.interactive:
+    pkgs = []
+    while True:
+      try:
+        pkg = input()
+        pkg = [p for ps in pkg.split(',') for p in ps.strip().split()]
+        for p in pkg:
+          if p in PKG:
+            pkgs.append(p)
+            print(f'# use {p}')
+          elif p in KEYWORDS:
+            pkgs.append(KEYWORDS[p])
+            print(f'# use {KEYWORDS[p]}')
+          else:
+            suggest = difflib.get_close_matches(p, list(PKG) + list(KEYWORDS))
+            print('# Did you mean', ' or '.join(suggest), '?')
+      except EOFError:
+        break
+    main(args.shell, pkgs, not args.not_expand)
+  elif args.use:
     main(args.shell, args.use, not args.not_expand)
