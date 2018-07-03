@@ -2,90 +2,18 @@
 """Simple Environment Variable Management
 """
 import argparse
+import json
 import os
 from os import environ as env
 
-META_PKG = {
-    'gcc': {
-        'CPATH': '{PREFIX}/include',
-        'LD_LIBRARY_PATH':
-        ['{PREFIX}/lib', '{PREFIX}/lib64', '{PREFIX}/libexec'],
-        'LIBRARY_PATH': ['{PREFIX}/lib', '{PREFIX}/lib64', '{PREFIX}/libexec'],
-        'PATH': '{PREFIX}/bin',
-    },
-    'intel': {
-        '__cmd': 'source {PREFIX}/bin/compilervars.sh intel64',
-    },
-    'standard': {
-        'CPATH': '{PREFIX}/include',
-        'LD_LIBRARY_PATH': '{PREFIX}/lib',
-        'LIBRARY_PATH': '{PREFIX}/lib',
-        'PATH': '{PREFIX}/bin',
-    },
-    'standard-64': {
-        'CPATH': '{PREFIX}/include',
-        'LD_LIBRARY_PATH': '{PREFIX}/lib64',
-        'LIBRARY_PATH': '{PREFIX}/lib64',
-        'PATH': '{PREFIX}/bin',
-    }
-}
-PKG = {
-    'gcc-8.1.0': {
-        '__keywords': ['gcc'],
-        '__prefix': '/home/chengscott/.local/gcc-8.1.0',
-        '__meta': 'gcc',
-    },
-    'cuda-9.2': {
-        '__keywords': ['cuda'],
-        '__prefix': '/usr/local/cuda-9.2',
-        '__meta': 'standard-64',
-        'CUDA_HOME': '{PREFIX}',
-    },
-    'cudnn-7.1+cuda-9.2': {
-        '__keywords': ['cudnn', 'cudnn-7.1'],
-        '__prefix': '{HOME}/.local/cudnn-9.2',
-        'CPATH': '{PREFIX}/include',
-        'LD_LIBRARY_PATH': '{PREFIX}/lib64',
-        'LIBRARY_PATH': '{PREFIX}/lib64',
-    },
-    'nccl-2.12+cuda-9.2': {
-        '__keywords': ['nccl', 'nccl-2.2'],
-        '__prefix': '{HOME}/.local/nccl_2.2.12-1+cuda9.2',
-        'CPATH': '{PREFIX}/include',
-        'LD_LIBRARY_PATH': '{PREFIX}/lib',
-        'LIBRARY_PATH': '{PREFIX}/lib',
-    },
-    'jdk-1.8': {
-        '__prefix': '{HOME}/.local/jdk1.8.0_171',
-        '__meta': 'standard',
-        'JAVA_HOME': '{PREFIX}',
-    },
-    'openmpi-1': {
-        '__keywords': ['openmpi-1.10.7', 'ompi-1', 'ompi-1.10.7'],
-        '__prefix': '{HOME}/ompi1',
-        '__meta': 'standard',
-    },
-    'openmpi-3': {
-        '__keywords':
-        ['openmpi-3.1.0', 'ompi-3', 'ompi-3.1.0', 'ompi', 'openmpi'],
-        '__prefix':
-        '{HOME}/ompi3',
-        '__meta':
-        'standard',
-    },
-    'intel-2018': {
-        '__keywords': ['intel'],
-        '__prefix': '/opt/intel2018',
-        '__meta': 'intel'
-    },
-    'intel-2017': {
-        '__prefix': '/opt/intel2017',
-        '__meta': 'intel'
-    },
-}
+HOME_PATH = env.get('HOME', '')
+META_PKG, PKG = {}, {}
+with open('meta.json') as f:
+  META_PKG = json.load(f)
+with open('pkg.json') as f:
+  PKG = json.load(f)
 KEYWORDS = dict(
     [(key, pkg) for pkg in PKG for key in PKG[pkg].get('__keywords', {})])
-HOME_PATH = env.get('HOME', '')
 for pkg in PKG:
   if '__meta' in PKG[pkg]:
     meta = PKG[pkg]['__meta']

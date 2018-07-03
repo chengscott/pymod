@@ -1,0 +1,23 @@
+{
+  "gcc-8.1.0": {
+    "__keywords": ["gcc"],
+    "__prefix": "/opt/gcc/8.1.0",
+    "__meta": "gcc"
+  },
+  "cuda-9.2": {
+    "__keywords": ["cuda"],
+    "__prefix": "/opt/cuda/9.2",
+    "__meta": "standard-64",
+    "CUDA_HOME": "{PREFIX}"
+  },
+  "jdk-1.8": {
+    "__prefix": "{HOME}/.local/jdk1.8.0",
+    "__meta": "standard",
+    "JAVA_HOME": "{PREFIX}"
+  },
+  "intel-compiler": {
+    "__keywords": ["intel"],
+    "__prefix": "/opt/intel/2018",
+    "__meta": "intel"
+  }
+}
