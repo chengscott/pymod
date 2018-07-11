@@ -8,19 +8,25 @@ import os
 from os import environ as env
 import sys
 
+
+def load_config(config):
+  ret = {}
+  search_path = ['/usr/local/etc/pmod', '~/.config/pmod', '']
+  for path in search_path:
+    try:
+      filename = os.path.join(os.path.expanduser(path), config)
+      print(filename)
+      with open(filename) as f:
+        ret.update(json.load(f))
+    except FileNotFoundError:
+      pass
+  return ret
+
+
 HOME_PATH = env.get('HOME', '')
-META_PKG, PKG = {}, {}
-with open('meta.json') as f:
-  META_PKG = json.load(f)
-with open('pkg.json') as f:
-  PKG = json.load(f)
-KEYWORDS = dict(
-    [(key, pkg) for pkg in PKG for key in PKG[pkg].get('__keywords', {})])
-for pkg in PKG:
-  if '__meta' in PKG[pkg]:
-    meta = PKG[pkg]['__meta']
-    PKG[pkg].update(META_PKG[meta])
-    PKG[pkg].pop('__meta')
+PKG = load_config('pkg.json')
+META_PKG = load_config('meta.json')
+KEYWORDS = {key: pkg for pkg in PKG for key in PKG[pkg].get('__keywords', {})}
 
 
 def use_fish(evars):
@@ -72,15 +78,48 @@ def main(shell, pkgs, expand):
   use_shell(evars)
 
 
+def interactive_mode():
+  pkgs = []
+  while True:
+    try:
+      pkg = input()
+      pkg = [p for ps in pkg.split(',') for p in ps.strip().split()]
+      for p in pkg:
+        if p in PKG:
+          pkgs.append(p)
+          print(f'# use {p}', file=sys.stderr)
+        elif p in KEYWORDS:
+          pkgs.append(KEYWORDS[p])
+          print(f'# use {KEYWORDS[p]}', file=sys.stderr)
+        else:
+          suggest = difflib.get_close_matches(p, list(PKG) + list(KEYWORDS))
+          if suggest:
+            print('# Did you mean', ' or '.join(suggest), '?', file=sys.stderr)
+          else:
+            print(f'# Invalid Package Name `{p}`', file=sys.stderr)
+    except EOFError:
+      break
+  return pkgs
+
+
+def preprocess_meta():
+  for pkg in PKG:
+    if '__meta' in PKG[pkg]:
+      meta = PKG[pkg]['__meta']
+      PKG[pkg].update(META_PKG[meta])
+      PKG[pkg].pop('__meta')
+
+
 def valid_use(pkg):
   if pkg in PKG:
     return pkg
   if pkg in KEYWORDS:
     return KEYWORDS[pkg]
-  raise argparse.ArgumentTypeError(f'Invalid Module Name `{pkg}`')
+  raise argparse.ArgumentTypeError(f'Invalid Package Name `{pkg}`')
 
 
 if __name__ == '__main__':
+  preprocess_meta()
   current_shell = os.path.basename(env.get('SHELL', 'bash'))
   parser = argparse.ArgumentParser()
   parser.add_argument(
@@ -94,23 +133,7 @@ if __name__ == '__main__':
   parser.add_argument('-i', '--interactive', action='store_true')
   args = parser.parse_args()
   if args.interactive:
-    pkgs = []
-    while True:
-      try:
-        pkg = input()
-        pkg = [p for ps in pkg.split(',') for p in ps.strip().split()]
-        for p in pkg:
-          if p in PKG:
-            pkgs.append(p)
-            print(f'# use {p}')
-          elif p in KEYWORDS:
-            pkgs.append(KEYWORDS[p])
-            print(f'# use {KEYWORDS[p]}')
-          else:
-            suggest = difflib.get_close_matches(p, list(PKG) + list(KEYWORDS))
-            print('# Did you mean', ' or '.join(suggest), '?')
-      except EOFError:
-        break
+    pkgs = interactive_mode()
     main(args.shell, pkgs, not args.not_expand)
   elif args.use:
     main(args.shell, args.use, not args.not_expand)
