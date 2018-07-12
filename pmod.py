@@ -15,7 +15,6 @@ def load_config(config):
   for path in search_path:
     try:
       filename = os.path.join(os.path.expanduser(path), config)
-      print(filename)
       with open(filename) as f:
         ret.update(json.load(f))
     except FileNotFoundError:
@@ -80,7 +79,9 @@ def main(shell, pkgs, expand):
 
 def interactive_mode():
   pkgs = []
+  print(f'# Input packages until EOF', file=sys.stderr)
   while True:
+    print('> ', end='', file=sys.stderr)
     try:
       pkg = input()
       pkg = [p for ps in pkg.split(',') for p in ps.strip().split()]
@@ -98,8 +99,18 @@ def interactive_mode():
           else:
             print(f'# Invalid Package Name `{p}`', file=sys.stderr)
     except EOFError:
+      print('', file=sys.stderr)
       break
   return pkgs
+
+
+def list_packages(count):
+  pkgs = {pkg: ', '.join(PKG[pkg].get('__keywords', '')) for pkg in PKG}
+  pkgs = {k: f'({v})' if v else '' for k, v in pkgs.items()}
+  if count == 1:
+    print('\n'.join([f'{k} {v}' for k, v in pkgs.items()]))
+  else:
+    print(' '.join(PKG.keys()))
 
 
 def preprocess_meta():
@@ -121,19 +132,34 @@ def valid_use(pkg):
 if __name__ == '__main__':
   preprocess_meta()
   current_shell = os.path.basename(env.get('SHELL', 'bash'))
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+      description='Simple Environment Variable Management')
   parser.add_argument(
       '-s',
       '--shell',
-      help='(default: current shell `%(default)s`)',
       default=current_shell,
-      type=str)
-  parser.add_argument('-u', '--use', action='append', type=valid_use)
-  parser.add_argument('-ne', '--not-expand', action='store_true')
-  parser.add_argument('-i', '--interactive', action='store_true')
+      type=str,
+      help='syntax (default: current shell `%(default)s`)')
+  parser.add_argument(
+      '-u', '--use', action='append', type=valid_use, metavar='PACKAGE')
+  parser.add_argument(
+      '-ne',
+      '--not-expand',
+      action='store_true',
+      help='[ne] environment vairable')
+  parser.add_argument(
+      '-i',
+      '--interactive',
+      action='store_true',
+      help='choose packages [interactively]')
+  # parser.add_argument('-o', '--output', type=str, metavar='FILENAME')
+  parser.add_argument(
+      '-l', '--list', action='count', help='available packages')
   args = parser.parse_args()
   if args.interactive:
     pkgs = interactive_mode()
     main(args.shell, pkgs, not args.not_expand)
   elif args.use:
     main(args.shell, args.use, not args.not_expand)
+  elif args.list:
+    list_packages(args.list)
