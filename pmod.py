@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
-"""Simple Environment Variable Management
-"""
+"""Simple Environment Variable Management"""
+__author__ = 'chengscott'
+__version__ = '0.1'
 import argparse
 import difflib
 import json
@@ -132,29 +133,30 @@ def valid_use(pkg):
 if __name__ == '__main__':
   preprocess_meta()
   current_shell = os.path.basename(env.get('SHELL', 'bash'))
-  parser = argparse.ArgumentParser(
-      description='Simple Environment Variable Management')
+  parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       '-s',
       '--shell',
       default=current_shell,
       type=str,
-      help='syntax (default: current shell `%(default)s`)')
+      help='syntax of shell (default: current shell `%(default)s`)')
   parser.add_argument(
       '-u', '--use', action='append', type=valid_use, metavar='PACKAGE')
   parser.add_argument(
       '-ne',
       '--not-expand',
       action='store_true',
-      help='[ne] environment vairable')
+      help='[not] expand environment vairable')
   parser.add_argument(
       '-i',
       '--interactive',
       action='store_true',
-      help='choose packages [interactively]')
+      help='use package [interactively]')
   # parser.add_argument('-o', '--output', type=str, metavar='FILENAME')
   parser.add_argument(
-      '-l', '--list', action='count', help='available packages')
+      '-l', '--list', action='count', help='show available packages')
+  parser.add_argument(
+      '-v', '--version', action='version', version=f'%(prog)s {__version__}')
   args = parser.parse_args()
   if args.interactive:
     pkgs = interactive_mode()
