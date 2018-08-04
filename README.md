@@ -1,10 +1,16 @@
-# pmod
+# pymod
+
+## installation
+
+```shell
+pip install pymod
+```
 
 ## config
 
 1. `.` (script directory)
-2.` ~/.config/pmod`
-3. `/usr/local/etc/pmod`
+2. ` ~/.config/pymod`
+3. `/usr/local/etc/pymod`
 
 ## shell usage
 
@@ -13,11 +19,11 @@
 ### bash
 
 ```shell
-$(./pmod.py -u ompi)
+$(pymod -u ompi)
 ```
 
 ### fish
 
 ```shell
-eval (./pmod.py -u ompi)
+eval (pymod -u ompi)
 ```

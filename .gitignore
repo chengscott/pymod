@@ -1,2 +1,8 @@
 meta.json
 pkg.json
+
+__pycache__
+build/
+dist/
+sdist/
+*.egg-info/
