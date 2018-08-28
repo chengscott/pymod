@@ -1,6 +1,6 @@
 # pymod
 
-## installation
+## Installation
 
 ```shell
 pip install pymod
@@ -12,18 +12,29 @@ pip install pymod
 2. ` ~/.config/pymod`
 3. `.`
 
-## shell usage
+## Usage
+
+### shell
+
+- invoke shell function under `profile.d`
+
+```shell
+pymod info
+pymod use cuda cudnn
+```
+
+### direct
 
 - take advantage of command substitution
 
-### bash
+#### bash
 
 ```shell
-$(pymod -u ompi)
+$(pymod use cuda cudnn)
 ```
 
-### fish
+#### fish
 
 ```shell
-eval (pymod -u ompi)
+eval (pymod use cuda cudnn)
 ```
