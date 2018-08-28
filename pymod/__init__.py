@@ -25,39 +25,37 @@ Type `help(mod)` for further usage"""
 
 def run_main():
   manager = Manager.from_json()
-  # TODO: report, purge, switch
+  # TODO: list, purge, switch
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
+      '-v', '--version', action='version', version=f'pymod {__version__}')
+  subparsers = parser.add_subparsers(dest='command')
+  use_parser = subparsers.add_parser('use', help='use package')
+  use_parser.add_argument('package', nargs='+', type=str)
+  use_parser.add_argument(
       '-s',
       '--shell',
       default=manager.shell,
       type=str,
       help='syntax of shell (default: current shell `%(default)s`)')
-  parser.add_argument(
-      '-u', '--use', action='append', type=str, metavar='PACKAGE')
-  parser.add_argument(
+  use_parser.add_argument(
       '-ne',
       '--not-expand',
       action='store_true',
       help='[not] expand environment vairable')
-  parser.add_argument(
-      '-i',
-      '--interactive',
-      action='store_true',
-      help='use package [interactively]')
-  # parser.add_argument('-o', '--output', type=str, metavar='FILENAME')
-  parser.add_argument(
-      '-a', '--avail', action='store_true', help='show available packages')
-  parser.add_argument(
-      '-v', '--version', action='version', version=f'pymod {__version__}')
+  # use_parser.add_argument('-o', '--output', type=str, metavar='FILENAME')
+  subparsers.add_parser('interactive', help='use package interactively')
+  avail_parser = subparsers.add_parser(
+      'info', help='show and search for packages')
+  avail_parser.add_argument('name', nargs='?', type=str, help='search keyword')
   args = parser.parse_args()
-  if args.avail:
-    manager.show()
-  elif args.interactive:
+  if args.command == 'info':
+    manager.show(args.name)
+  elif args.command == 'interactive':
     interactive_mode()
-  elif args.use:
+  elif args.command == 'use':
     manager.use_shell(args.shell)
-    manager.use(args.use, not args.not_expand)
+    manager.use(args.package, not args.not_expand)
 
 
 if __name__ == '__main__':

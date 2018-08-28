@@ -149,10 +149,11 @@ class Manager:
         raise PackageNotFound(f'package `{p}` is not found')
     self.__use_package(pkgs, *args, **kwds)
 
-  def find(self):
+  def find(self, pkg=''):
     """Search for a package name interactively"""
     import difflib
-    pkg = input('Package name: ')
+    if not pkg:
+      pkg = input('Package name: ')
     keyword = list(self.__keyword)
     if pkg in keyword:
       pkg = self.__keyword[pkg]
@@ -171,10 +172,13 @@ class Manager:
       else:
         raise PackageNotFound(f'package `{pkg}` is not found')
 
-  def show(self):
+  def show(self, name=''):
     """Show available packages"""
-    for pkg, kwd in self.__pkg_kwd.items():
-      self.__output(pkg, kwd)
+    if name:
+      self.find(name)
+    else:
+      for pkg, kwd in self.__pkg_kwd.items():
+        self.__output(pkg, kwd)
 
   def __output(self, *line, interactive=False):
     if interactive:
