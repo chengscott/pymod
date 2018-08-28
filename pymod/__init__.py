@@ -9,27 +9,23 @@ from .manager import Manager
 def interactive_mode():
   import code
   import readline
+  banner = f"""\
+Pymod {__version__} Interactive Mode
+Type `help(mod)` for further usage"""
 
-  def run():
+  def env():
     from .manager import Manager
     mod = Manager.from_json()
-    variables = {
-        'mod': mod,
-        'Manager': Manager,
-    }
-    # variables = locals()
-    banner = """\
-mod.find() to prompt and search for a module name
-mod.use('pkg') to use a (list of) module(s)
-help(mod) for further usage\
-"""
-    code.interact(banner=banner, local=variables)
+    return locals()
 
-  run()
+  variables = env()
+  shell = code.InteractiveConsole(locals=variables)
+  shell.interact(banner=banner)
 
 
 def run_main():
   manager = Manager.from_json()
+  # TODO: report, purge, switch
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument(
       '-s',
@@ -39,10 +35,6 @@ def run_main():
       help='syntax of shell (default: current shell `%(default)s`)')
   parser.add_argument(
       '-u', '--use', action='append', type=str, metavar='PACKAGE')
-  #parser.add_argument(
-  #    '--purge', action='append', type=valid_use, metavar='PACKAGE')
-  #parser.add_argument(
-  #    '-s', '--switch', action='append', type=valid_use, metavar='PACKAGE')
   parser.add_argument(
       '-ne',
       '--not-expand',
@@ -60,7 +52,7 @@ def run_main():
       '-v', '--version', action='version', version=f'pymod {__version__}')
   args = parser.parse_args()
   if args.avail:
-    manager.show(args.avail)
+    manager.show()
   elif args.interactive:
     interactive_mode()
   elif args.use:

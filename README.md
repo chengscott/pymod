@@ -6,11 +6,11 @@
 pip install pymod
 ```
 
-## config
+### config search path
 
-1. `.` (script directory)
+1. `/usr/local/etc/pymod`
 2. ` ~/.config/pymod`
-3. `/usr/local/etc/pymod`
+3. `.`
 
 ## shell usage
 

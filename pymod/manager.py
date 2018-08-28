@@ -1,5 +1,22 @@
 import json
 import os
+import sys
+
+
+class ShellError(Exception):
+  pass
+
+
+class ShellNotSupported(ShellError):
+  pass
+
+
+class PackageError(Exception):
+  pass
+
+
+class PackageNotFound(PackageError):
+  pass
 
 
 class Manager:
@@ -9,11 +26,21 @@ class Manager:
     """Initialize from a dict"""
     self.__home_path = os.environ.get('HOME', '')
     self.__package = package
+    # {keyword: package}
     self.__keyword = {
         key: pkg
         for pkg in package for key in package[pkg].get('__keywords', {})
     }
     self.__keyword.update({pkg: pkg for pkg in package})
+    # {package: keyword format str}
+    pkg_kwd = {
+        pkg: ', '.join(self.__package[pkg].get('__keywords', ''))
+        for pkg in self.__package
+    }
+    self.__pkg_kwd = {
+        pkg: f'({kwd})' if kwd else ''
+        for pkg, kwd in pkg_kwd.items()
+    }
     self.shell = os.path.basename(os.environ.get('SHELL', 'bash'))
     self.use_shell(self.shell)
 
@@ -29,6 +56,7 @@ class Manager:
       cls.__preprocess_meta(pkg, meta)
     return cls(pkg)
 
+  @staticmethod
   def __load_json(config, search_path):
     ret = {}
     for path in search_path:
@@ -40,6 +68,7 @@ class Manager:
         pass
     return ret
 
+  @staticmethod
   def __preprocess_meta(pkg, meta):
     for p in pkg:
       if '__meta' in pkg[p]:
@@ -53,7 +82,7 @@ class Manager:
     def use_bash(evars):
       for var, val, old_val in evars:
         new_val = ':'.join(filter(None, [val, old_val]))
-        print(f'export {var}={new_val}')
+        self.__output(f'export {var}={new_val}')
 
     def use_fish(evars):
       for var, val, old_val in evars:
@@ -61,17 +90,22 @@ class Manager:
           new_val = ' '.join(val.split(':') + old_val.split(':'))
         else:
           new_val = ':'.join(filter(None, [val, old_val]))
-        print(f'set -x {var} {new_val};')
+        self.__output(f'set -x {var} {new_val};')
+
+    def use_csh(evars):
+      raise NotImplementedError
 
     use = {
         'bash': use_bash,
-        'fish': use_fish,
         'zsh': use_bash,
+        'fish': use_fish,
+        'csh': use_csh,
+        'tcsh': use_csh,
     }
-    if shell not in use:
-      print(f'`{shell}` is not a supported shell')
-    else:
+    if shell in use:
       self._shell = use[shell]
+    else:
+      raise ShellNotSupported(f'`{shell}` is not supported')
 
   def __use_package(self, pkgs, expand=False):
     from collections import defaultdict
@@ -85,7 +119,12 @@ class Manager:
           else:
             path[var].append(val.format(PREFIX=prefix))
     if '__cmd' in path:
-      print(*path['__cmd'], sep='\n')
+      cmd = path['__cmd']
+      if isinstance(cmd, list):
+        for c in cmd:
+          self.__output(c)
+      else:
+        self.__output(cmd)
       path.pop('__cmd')
     evars = [(var, ':'.join(vals)) for var, vals in path.items()
              if not var.startswith('__')]
@@ -107,34 +146,38 @@ class Manager:
       elif p in self.__keyword:
         pkgs[i] = self.__keyword[p]
       else:
-        print(f'# Invalid Package Name `{p}`')
-        return
+        raise PackageNotFound(f'package `{p}` is not found')
     self.__use_package(pkgs, *args, **kwds)
 
   def find(self):
     """Search for a package name interactively"""
     import difflib
-    import sys
-
-    def prompt(msg, *args, **kwds):
-      print(msg, *args, **kwds, file=sys.stderr)
-
-    pkg = input()
+    pkg = input('Package name: ')
     keyword = list(self.__keyword)
     if pkg in keyword:
-      prompt(f'# Avaiable Package `{self.__keyword[pkg]}`')
+      pkg = self.__keyword[pkg]
+      kwd = self.__pkg_kwd[pkg]
+      self.__output(f'Avaiable Package `{pkg}` {kwd}', interactive=True)
     else:
       suggest = difflib.get_close_matches(pkg, keyword)
-      if suggest:
-        prompt('# Did you mean', ' or '.join(suggest), '?')
+      if len(suggest) == 1:
+        pkg, = suggest
+        pkg = self.__keyword[pkg]
+        kwd = self.__pkg_kwd[pkg]
+        self.__output(f'Did you mean `{pkg}` {kwd} ?')
+      elif suggest:
+        pkgs = ' or '.join(suggest)
+        self.__output(f'Did you mean {pkgs} ?', interactive=True)
       else:
-        prompt(f'# Invalid Package Name `{p}`')
+        raise PackageNotFound(f'package `{pkg}` is not found')
 
-  def show(self, avail):
+  def show(self):
     """Show available packages"""
-    pkgs = {
-        pkg: ', '.join(self.__package[pkg].get('__keywords', ''))
-        for pkg in self.__package
-    }
-    pkgs = {k: f'({v})' if v else '' for k, v in pkgs.items()}
-    print('\n'.join([f'{k} {v}' for k, v in pkgs.items()]))
+    for pkg, kwd in self.__pkg_kwd.items():
+      self.__output(pkg, kwd)
+
+  def __output(self, *line, interactive=False):
+    if interactive:
+      print(*line, file=sys.stderr)
+    else:
+      print(*line)
