@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 
@@ -49,15 +48,28 @@ class Manager:
                 pkg='pkg.json',
                 meta='meta.json',
                 search_path=('/usr/local/etc/pymod', '~/.config/pymod', '')):
-    """Initialize from jsons under these search path"""
+    """Initialize from json files under search path"""
     pkg = cls.__load_json(pkg, search_path)
     if meta:
       meta = cls.__load_json(meta, search_path)
       cls.__preprocess_meta(pkg, meta)
     return cls(pkg)
 
+  @classmethod
+  def from_ini(cls,
+               pkg='pkg.ini',
+               meta='meta.ini',
+               search_path=('/usr/local/etc/pymod', '~/.config/pymod', '')):
+    """Initialize from ini files under search_path"""
+    pkg = cls.__load_ini(pkg, search_path)
+    if meta:
+      meta = cls.__load_ini(meta, search_path, is_meta=True)
+      cls.__preprocess_meta(pkg, meta)
+    return cls(pkg)
+
   @staticmethod
   def __load_json(config, search_path):
+    import json
     ret = {}
     for path in search_path:
       try:
@@ -69,7 +81,71 @@ class Manager:
     return ret
 
   @staticmethod
+  def __load_ini(config, search_path, is_meta=False):
+    import configparser
+    import re
+    RE = re.compile(r'^\[(.*)\]', flags=re.MULTILINE)
+
+    def load_pkg(res):
+      ret = {}
+      res = iter(RE.split(res)[1:])
+      for meta in res:
+        pkg = next(res)
+        conf = configparser.ConfigParser()
+        conf.optionxform = str
+        conf.read_string(pkg)
+        for k, v in conf.items():
+          if k != 'DEFAULT':
+            pkg = dict(v)
+            pkg['__keywords'] = re.split('[ ,]+', pkg.pop('alias', ''))
+            pkg['__prefix'] = pkg.pop('prefix', '')
+            pkg['__cmd'] = pkg.pop('cmd', '')
+            pkg['__meta'] = meta
+            ret[k] = {
+                pk: pv if pk.startswith('__') else re.split('[ :,]+', pv)
+                for pk, pv in pkg.items()
+            }
+      return ret
+
+    def load_meta(res):
+      ret = {}
+      conf = configparser.ConfigParser()
+      conf.optionxform = str
+      conf.read_string(res)
+      ret = {k: dict(v) for k, v in conf.items() if k != 'DEFAULT'}
+      for k, v in conf.items():
+        if k != 'DEFAULT':
+          pkg = dict(v)
+          pkg['__keywords'] = re.split('[ ,]+', pkg.pop('alias', ''))
+          pkg['__cmd'] = pkg.pop('cmd', '')
+          ret[k] = {
+              pk: pv if pk.startswith('__') else re.split('[ :,]+', pv)
+              for pk, pv in pkg.items()
+          }
+      return ret
+
+    ret = {}
+    for path in search_path:
+      try:
+        filename = os.path.join(os.path.expanduser(path), config)
+        with open(filename) as f:
+          res = f.read()
+          if is_meta:
+            res = load_meta(res)
+          else:
+            res = load_pkg(res)
+        ret.update(res)
+      except FileNotFoundError:
+        pass
+    return ret
+
+  @staticmethod
   def __preprocess_meta(pkg, meta):
+    mk = {}
+    for v in meta.values():
+      ks = v.pop('__keywords', '')
+      mk.update({k: v for k in ks})
+    meta.update(mk)
     for p in pkg:
       if '__meta' in pkg[p]:
         m = pkg[p]['__meta']
