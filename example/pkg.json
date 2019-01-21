@@ -1,23 +1,31 @@
 {
-  "gcc-8.1.0": {
-    "__keywords": ["gcc"],
-    "__prefix": "/opt/gcc/8.1.0",
+  "gcc-8.2.0": {
+    "__keywords": ["gcc8"],
+    "__prefix": "/opt/gcc/8.2.0",
     "__meta": "gcc"
   },
-  "cuda-9.2": {
+  "gcc-7.3.0": {
+    "__keywords": ["gcc7", "gcc"],
+    "__prefix": "/opt/gcc/7.3.0",
+    "__meta": "gcc"
+  },
+  "cuda-10.0": {
     "__keywords": ["cuda"],
-    "__prefix": "/opt/cuda/9.2",
-    "__meta": "standard-64",
-    "CUDA_HOME": "{PREFIX}"
+    "__prefix": "/usr/local/cuda-10.0",
+    "__meta": "cuda"
+  },
+  "cudnn-7.3+cuda10": {
+    "__keywords": ["cudnn"],
+    "__prefix": "/opt/cuda/10.0/cudnn-7.3",
+    "__meta": "cudnn"
   },
   "jdk-1.8": {
     "__prefix": "{HOME}/.local/jdk1.8.0",
     "__meta": "standard",
     "JAVA_HOME": "{PREFIX}"
   },
-  "intel-compiler": {
-    "__keywords": ["intel"],
-    "__prefix": "/opt/intel/2018",
+  "intel-2019": {
+    "__prefix": "/opt/intel/2019",
     "__meta": "intel"
   }
 }

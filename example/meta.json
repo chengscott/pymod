@@ -1,23 +1,30 @@
 {
   "gcc": {
-    "CPATH": "{PREFIX}/include",
-    "LD_LIBRARY_PATH": ["{PREFIX}/lib", "{PREFIX}/lib64", "{PREFIX}/libexec"],
-    "LIBRARY_PATH": ["{PREFIX}/lib", "{PREFIX}/lib64", "{PREFIX}/libexec"],
-    "PATH": "{PREFIX}/bin"
+    "PATH": "{PREFIX}/bin",
+    "LD_LIBRARY_PATH": ["{PREFIX}/lib", "{PREFIX}/lib64", "{PREFIX}/libexec"]
   },
   "intel": {
     "__cmd": "source {PREFIX}/bin/compilervars.sh intel64"
   },
   "standard": {
-    "CPATH": "{PREFIX}/include",
+    "PATH": "{PREFIX}/bin",
     "LD_LIBRARY_PATH": "{PREFIX}/lib",
-    "LIBRARY_PATH": "{PREFIX}/lib",
-    "PATH": "{PREFIX}/bin"
+    "CPATH": "{PREFIX}/include",
+    "LIBRARY_PATH": "{PREFIX}/lib"
   },
   "standard-64": {
-    "CPATH": "{PREFIX}/include",
+    "__keywords": ["cudnn"],
+    "PATH": "{PREFIX}/bin",
     "LD_LIBRARY_PATH": "{PREFIX}/lib64",
-    "LIBRARY_PATH": "{PREFIX}/lib64",
-    "PATH": "{PREFIX}/bin"
+    "CPATH": "{PREFIX}/include",
+    "LIBRARY_PATH": "{PREFIX}/lib64"
+  },
+  "cuda": {
+    "CUDA_HOME": "{PREFIX}",
+    "CUDA_TOOLKIT_PATH": "{PREFIX}",
+    "PATH": "{PREFIX}/bin",
+    "LD_LIBRARY_PATH": ["{PREFIX}/lib64", "{PREFIX}/extras/CUPTI/lib64"],
+    "CPATH": ["{PREFIX}/include", "{PREFIX}/extras/CUPTI/include"],
+    "LIBRARY_PATH": ["{PREFIX}/lib64", "{PREFIX}/extras/CUPTI/lib64"]
   }
 }

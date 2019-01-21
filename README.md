@@ -6,15 +6,11 @@
 pip install pymod
 ```
 
-### config search path
-
-1. `/usr/local/etc/pymod`
-2. ` ~/.config/pymod`
-3. `.`
-
 ## Usage
 
-### shell
+- [pymod wiki](https://github.com/chengscott/pymod/wiki)
+
+### Indirect (recommended)
 
 - invoke shell function under `profile.d`
 
@@ -23,18 +19,19 @@ pymod info
 pymod use cuda cudnn
 ```
 
-### direct
+### Direct
 
-- take advantage of command substitution
+- take advantage of shell command substitution
+  - `bash`: `$(pymod use cuda cudnn)`
+  - `fish`: `eval (pymod use cuda cudnn)`
 
-#### bash
+## Features
 
-```shell
-$(pymod use cuda cudnn)
-```
+- search for packages
 
-#### fish
-
-```shell
-eval (pymod use cuda cudnn)
+```bash
+pymod info cud
+# Did you mean cuda or cudnn or cuda9 ?
+pymod info cuda
+# Avaiable Package `cuda-10.0` (cuda)
 ```

@@ -1,9 +1,9 @@
 """Simple Environment Variable Management"""
 __author__ = 'chengscott'
-__version__ = '0.2'
+__version__ = '0.3'
 import argparse
 
-from .manager import Manager
+from pymod.manager import Manager
 
 
 def interactive_mode():
@@ -14,7 +14,7 @@ Pymod {__version__} Interactive Mode
 Type `help(mod)` for further usage"""
 
   def env():
-    from .manager import Manager
+    from pymod.manager import Manager
     mod = Manager.from_json()
     return locals()
 
